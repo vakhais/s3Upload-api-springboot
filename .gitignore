@@ -26,5 +26,6 @@
 /nbdist/
 /.nb-gradle/
 
+aws.properties
 /target/
 /src/test/
