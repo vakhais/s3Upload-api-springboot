@@ -101,12 +101,12 @@ public class S3ServicesImpl implements S3Services {
 			
 			String streFileName = dateFormat.format(new Date()).toString() + "" + (random.nextInt(8999) + 1000) + "." + this.getExtension(keyName);
 			String attachId = String.valueOf(System.nanoTime()); 
-			String uploadPath = "/edu/contents/" + attachId;
+			String uploadPath = "edu/contents/" + streFileName;
 			String orgNm = keyName;
 			
 			ObjectMetadata metadata = new ObjectMetadata();
 			metadata.setContentLength(file.getSize());
-			s3client.putObject(bucketName, keyName, file.getInputStream(), metadata);
+			s3client.putObject(bucketName, uploadPath, file.getInputStream(), metadata);
 			logger.info("Success Upload");
 			
 			//DB attach관련 등록
