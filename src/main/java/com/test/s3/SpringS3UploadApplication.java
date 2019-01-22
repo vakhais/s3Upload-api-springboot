@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
 
 @SpringBootApplication
-@PropertySource(value = { "classpath:${aws.config}" })
+@PropertySource("aws.properties")
 public class SpringS3UploadApplication {
 
 	public static void main(String[] args) {
