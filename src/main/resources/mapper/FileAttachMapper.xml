@@ -4,6 +4,35 @@
 
 <mapper namespace="com.test.s3.dao.FileAttachDao"> 
 
-	
+	<insert id="insert">
+        <selectKey keyProperty="file_seqno" resultType="Integer" order="BEFORE">
+            SELECT IFNULL(MAX(file_seqno), 0) + 1 AS file_seqno
+            FROM   tb_sys_file_storage
+            WHERE  attach_id    = #{attach_id}
+        </selectKey>
+        INSERT INTO tb_sys_file_storage (
+            attach_id      /* 첨부 아이디 */
+            ,file_seqno    /* 파일 일련번호 */
+            ,real_file_nm  /* 실제 파일 명 */
+            ,save_file_nm  /* 저장 파일 명 */
+            ,file_size     /* 파일 크기 */
+            ,file_path     /* 파일 경로 */
+            ,download_cnt  /* 다운로드 횟수 */
+            ,reg_id        /* 등록 아이디 */
+            ,reg_ip        /* 등록 아이피 */
+            ,reg_dt        /* 등록 일시 */
+        ) VALUES (
+            #{attach_id}
+            ,#{file_seqno}
+            ,#{real_file_nm}
+            ,#{save_file_nm}
+            ,#{file_size}
+            ,#{file_path}
+            ,0
+            ,'UPLOADER-API'
+            ,''
+            ,NOW()
+        )
+    </insert>
 
 </mapper>

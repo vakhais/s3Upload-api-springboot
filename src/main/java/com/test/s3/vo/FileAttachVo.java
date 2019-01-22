@@ -8,7 +8,7 @@ public class FileAttachVo {
 	private Integer file_seqno;
 	private String real_file_nm;
 	private String save_file_nm;
-	private Integer file_size;
+	private Long file_size;
 	private String file_path;
 	private Integer download_cnt;
 	private String reg_id;
@@ -39,10 +39,10 @@ public class FileAttachVo {
 	public void setSave_file_nm(String save_file_nm) {
 		this.save_file_nm = save_file_nm;
 	}
-	public Integer getFile_size() {
+	public Long getFile_size() {
 		return file_size;
 	}
-	public void setFile_size(Integer file_size) {
+	public void setFile_size(Long file_size) {
 		this.file_size = file_size;
 	}
 	public String getFile_path() {

@@ -3,9 +3,12 @@ package com.test.s3.services.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
- 
+import java.util.Random;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +25,9 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.test.s3.dao.FileAttachDao;
 import com.test.s3.services.S3Services;
+import com.test.s3.vo.FileAttachVo;
  
 @Service
 public class S3ServicesImpl implements S3Services {
@@ -31,7 +36,19 @@ public class S3ServicesImpl implements S3Services {
 	
 	@Autowired
 	private AmazonS3 s3client;
+	
+	@Autowired
+	private FileAttachDao fileAttachDao;
  
+	@Value("${gkz.aws.access_key_id}")
+	private String awsId;
+ 
+	@Value("${gkz.aws.secret_access_key}")
+	private String awsKey;
+	
+	@Value("${gkz.s3.region}")
+	private String region;
+	
 	@Value("${gkz.s3.bucket}")
 	private String bucketName;
  
@@ -69,12 +86,40 @@ public class S3ServicesImpl implements S3Services {
 	}
  
 	@Override
-	public void uploadFile(String keyName, MultipartFile file) {
+	public FileAttachVo uploadFile(String keyName, MultipartFile file) {
+		FileAttachVo fileAttachVo = new FileAttachVo();
+		
 		try {
+			logger.info("This AWS Access Key Id:    " + this.awsId);
+			logger.info("This AWS Access Scret Key: " + this.awsKey);
+			logger.info("This AWS S3 Bucket:        " + this.bucketName);
+			logger.info("This AWS S3 Region:        " + this.region);
+			
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+			Random random = new Random();
+			
+			
+			String streFileName = dateFormat.format(new Date()).toString() + "" + (random.nextInt(8999) + 1000) + "." + this.getExtension(keyName);
+			String attachId = String.valueOf(System.nanoTime()); 
+			String uploadPath = "/edu/contents/" + attachId;
+			String orgNm = keyName;
+			
 			ObjectMetadata metadata = new ObjectMetadata();
 			metadata.setContentLength(file.getSize());
 			s3client.putObject(bucketName, keyName, file.getInputStream(), metadata);
 			logger.info("Success Upload");
+			
+			//DB attach관련 등록
+			
+			fileAttachVo.setReal_file_nm(orgNm);
+			fileAttachVo.setSave_file_nm(streFileName);
+			fileAttachVo.setAttach_id(attachId);
+			fileAttachVo.setFile_path("/contents");
+			fileAttachVo.setFile_size(file.getSize());
+			
+			fileAttachDao.insert(fileAttachVo);
+			
+			return fileAttachVo;
 		} catch(IOException ioe) {
 			logger.error("IOException: " + ioe.getMessage());
 		} catch (AmazonServiceException ase) {
@@ -84,12 +129,15 @@ public class S3ServicesImpl implements S3Services {
 			logger.info("AWS Error Code:   " + ase.getErrorCode());
 			logger.info("Error Type:       " + ase.getErrorType());
 			logger.info("Request ID:       " + ase.getRequestId());
-			throw ase;
+			//throw ase;
+			return fileAttachVo;
         } catch (AmazonClientException ace) {
             logger.info("Caught an AmazonClientException: ");
             logger.info("Error Message: " + ace.getMessage());
-            throw ace;
+            //throw ace;
+            return fileAttachVo;
         }
+		return null;
 	}
 	
 	public List<String> listFiles() {
@@ -118,5 +166,9 @@ public class S3ServicesImpl implements S3Services {
 		}
 		
 		return keys;
+	}
+	
+	public String getExtension(String fileName) {
+		return fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length());
 	}
 }
